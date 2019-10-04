@@ -1,50 +1,17 @@
-#
-# Copyright (C) 2006-2012 OpenWrt.org
-#
-# This is free software, licensed under the GNU General Public License v2.
-# See /LICENSE for more information.
-#
+CC=gcc
+WFLAGS=-Wall
+CFLAGS=-O2
+INCLUDES=-Iinclude
 
-include $(TOPDIR)/rules.mk
+LIBNAME=libnl-tiny.so
 
-PKG_NAME:=libnl-tiny
-PKG_VERSION:=0.1
-PKG_RELEASE:=5
+all: $(LIBNAME)
 
-PKG_LICENSE:=LGPL-2.1
-PKG_MAINTAINER:=Felix Fietkau <nbd@nbd.name>
+%.o: %.c
+	$(CC) $(WFLAGS) -c -o $@ $(INCLUDES) $(CFLAGS) $<
 
-include $(INCLUDE_DIR)/package.mk
+LIBNL_OBJ=nl.o handlers.o msg.o attr.o cache.o cache_mngt.o object.o socket.o error.o
+GENL_OBJ=genl.o genl_family.o genl_ctrl.o genl_mngt.o unl.o
 
-define Package/libnl-tiny
-  SECTION:=libs
-  CATEGORY:=Libraries
-  TITLE:=netlink socket library
-endef
-
-define Package/libnl-tiny/description
- This package contains a stripped down version of libnl
-endef
-
-TARGET_CFLAGS += $(FPIC)
-
-define Build/Compile
-	$(MAKE) -C $(PKG_BUILD_DIR) \
-		$(TARGET_CONFIGURE_OPTS) \
-		CFLAGS="$(TARGET_CFLAGS)" \
-		all
-endef
-
-define Build/InstallDev
-	$(INSTALL_DIR) $(1)/usr/lib/pkgconfig $(1)/usr/include/libnl-tiny
-	$(CP) $(PKG_BUILD_DIR)/include/* $(1)/usr/include/libnl-tiny
-	$(CP) $(PKG_BUILD_DIR)/libnl-tiny.so $(1)/usr/lib/
-	$(CP) ./files/libnl-tiny.pc $(1)/usr/lib/pkgconfig
-endef
-
-define Package/libnl-tiny/install
-	$(INSTALL_DIR) $(1)/usr/lib
-	$(CP) $(PKG_BUILD_DIR)/libnl-tiny.so $(1)/usr/lib/
-endef
-
-$(eval $(call BuildPackage,libnl-tiny))
+$(LIBNAME): $(LIBNL_OBJ) $(GENL_OBJ)
+	$(CC) $(CFLAGS) -Wl,-Bsymbolic-functions -shared -o $@ $^
