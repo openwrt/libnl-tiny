@@ -24,7 +24,12 @@ SET(SOURCES
 	socket.c
 	unl.c
 )
+
+SET(SOVERSION 1 CACHE STRING "Override libnl-tiny library version")
+
 ADD_LIBRARY(nl-tiny SHARED ${SOURCES})
+SET_TARGET_PROPERTIES(nl-tiny PROPERTIES SOVERSION ${SOVERSION})
+
 ADD_LIBRARY(nl-tiny-static STATIC ${SOURCES})
 SET_TARGET_PROPERTIES(nl-tiny-static PROPERTIES OUTPUT_NAME nl-tiny)
 
