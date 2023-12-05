@@ -26,8 +26,9 @@ extern "C" {
 #define NL_NO_AUTO_ACK		(1<<4)
 
 struct nl_cb;
+struct nl_msg;
 
-typedef void (*nl_debug_cb)(void *priv, const void *data, size_t len);
+typedef void (*nl_debug_cb)(void *priv, struct nl_msg *msg);
 struct nl_sock
 {
 	struct sockaddr_nl	s_local;

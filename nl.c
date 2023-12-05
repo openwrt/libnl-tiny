@@ -192,9 +192,6 @@ int nl_sendto(struct nl_sock *sk, void *buf, size_t size)
 {
 	int ret;
 
-	if (sk->s_debug_tx_cb)
-		sk->s_debug_tx_cb(sk->s_debug_tx_priv, buf, size);
-
 	ret = sendto(sk->s_fd, buf, size, 0, (struct sockaddr *)
 		     &sk->s_peer, sizeof(sk->s_peer));
 	if (ret < 0)
@@ -230,8 +227,10 @@ int nl_sendmsg(struct nl_sock *sk, struct nl_msg *msg, struct msghdr *hdr)
 		if (nl_cb_call(cb, NL_CB_MSG_OUT, msg) != NL_OK)
 			return 0;
 
-	if (sk->s_debug_tx_cb)
-		sk->s_debug_tx_cb(sk->s_debug_tx_priv, iov.iov_base, iov.iov_len);
+	if (sk->s_debug_tx_cb) {
+		nlmsg_set_proto(msg, sk->s_proto);
+		sk->s_debug_tx_cb(sk->s_debug_tx_priv, msg);
+	}
 
 	ret = sendmsg(sk->s_fd, hdr, 0);
 	if (ret < 0)
@@ -533,13 +532,13 @@ continue_reading:
 			goto out;
 		}
 
-		if (sk->s_debug_rx_cb)
-			sk->s_debug_rx_cb(sk->s_debug_rx_priv, hdr, hdr->nlmsg_len);
-
 		nlmsg_set_proto(msg, sk->s_proto);
 		nlmsg_set_src(msg, &nla);
 		if (creds)
 			nlmsg_set_creds(msg, creds);
+
+		if (sk->s_debug_rx_cb)
+			sk->s_debug_rx_cb(sk->s_debug_rx_priv, msg);
 
 		/* Raw callback is the first, it gives the most control
 		 * to the user and he can do his very own parsing. */
