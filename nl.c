@@ -472,9 +472,6 @@ retry:
 		}
 	}
 
-	if (sk->s_debug_rx_cb)
-		sk->s_debug_rx_cb(sk->s_debug_rx_priv, *buf, n);
-
 	free(msg.msg_control);
 	return n;
 
@@ -535,6 +532,9 @@ continue_reading:
 			err = -NLE_NOMEM;
 			goto out;
 		}
+
+		if (sk->s_debug_rx_cb)
+			sk->s_debug_rx_cb(sk->s_debug_rx_priv, hdr, hdr->nlmsg_len);
 
 		nlmsg_set_proto(msg, sk->s_proto);
 		nlmsg_set_src(msg, &nla);
